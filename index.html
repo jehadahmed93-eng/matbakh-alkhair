@@ -46,5 +46,20 @@
   <!-- كود التطبيق -->
   <script src="app.js"></script>
 
+  <!-- تسجيل Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js")
+          .then(function () {
+            console.log("Service Worker registered successfully");
+          })
+          .catch(function (error) {
+            console.log("Service Worker registration failed:", error);
+          });
+      });
+    }
+  </script>
+
 </body>
 </html>

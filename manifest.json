@@ -1,10 +1,12 @@
 {
   "name": "مطبخ الخير",
-  "short_name": "المطبخ",
-  "start_url": "index.html",
+  "short_name": "مطبخ الخير",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1f7a63",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon.png",
