@@ -1,12 +1,12 @@
-const CACHE_NAME = "matbakh-alkhair-v1";
+const CACHE_NAME = "matbakh-alkhair-v2";
 
 const ASSETS_TO_CACHE = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./app.js",
-  "./manifest.json",
-  "./icon.png",
+  "/matbakh-alkhair/",
+  "/matbakh-alkhair/index.html",
+  "/matbakh-alkhair/style.css",
+  "/matbakh-alkhair/app.js",
+  "/matbakh-alkhair/manifest.json",
+  "/matbakh-alkhair/icon.png",
   "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"
 ];
 
@@ -34,8 +34,8 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      return cachedResponse || fetch(event.request);
+    caches.match(event.request).then(cached => {
+      return cached || fetch(event.request);
     })
   );
 });

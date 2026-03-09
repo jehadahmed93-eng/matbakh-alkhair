@@ -1,17 +1,18 @@
 {
-  "name": "مطبخ الخير",
-  "short_name": "مطبخ الخير",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1f7a63",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+"name": "مطبخ الخير",
+"short_name": "مطبخ الخير",
+"id": "/matbakh-alkhair/",
+"start_url": "/matbakh-alkhair/",
+"scope": "/matbakh-alkhair/",
+"display": "standalone",
+"background_color": "#ffffff",
+"theme_color": "#1f7a63",
+"orientation": "portrait",
+"icons": [
+{
+"src": "/matbakh-alkhair/icon.png",
+"sizes": "512x512",
+"type": "image/png"
+}
+]
 }
