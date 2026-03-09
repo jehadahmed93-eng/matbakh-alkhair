@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مطبخ الخير</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="theme-color" content="#1f7a63">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="مطبخ الخير">
+
+  <link rel="apple-touch-icon" href="icon.png">
+</head>
+
+<body>
+
+  <!-- الشريط العلوي -->
+  <header class="topbar">
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <h1>مطبخ الخير</h1>
+  </header>
+
+  <!-- القائمة الجانبية -->
+  <div class="sidebar" id="sidebar">
+    <a onclick="showHome();closeMenu()">الرئيسية</a>
+    <a onclick="showIncoming();closeMenu()">الوارد</a>
+    <a onclick="showOutgoing();closeMenu()">الخارج</a>
+    <a onclick="showStock();closeMenu()">المخزون</a>
+    <a onclick="showStats();closeMenu()">الإحصائيات</a>
+    <a onclick="showBackup();closeMenu()">نسخ احتياطي</a>
+  </div>
+
+  <!-- الخلفية المعتمة -->
+  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+  <!-- المحتوى الرئيسي -->
+  <main id="content"></main>
+
+  <!-- مكتبة Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+  <!-- كود التطبيق -->
+  <script src="app.js"></script>
+
+</body>
+</html>
