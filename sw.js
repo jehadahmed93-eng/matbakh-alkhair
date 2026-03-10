@@ -1,4 +1,4 @@
-const CACHE_NAME = "matbakh-alkhair-v2";
+const CACHE_NAME = "matbakh-alkhair-v3";
 
 const ASSETS_TO_CACHE = [
   "/matbakh-alkhair/",
@@ -25,6 +25,7 @@ self.addEventListener("activate", event => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
+          return null;
         })
       )
     )
@@ -33,9 +34,11 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request);
+    caches.match(event.request).then(cachedResponse => {
+      return cachedResponse || fetch(event.request);
     })
   );
 });
