@@ -1,12 +1,13 @@
-const CACHE_NAME = "matbakh-alkhair-v3";
+const CACHE_NAME = "matbakh-alkhair-v5";
 
 const ASSETS_TO_CACHE = [
-  "/matbakh-alkhair/",
-  "/matbakh-alkhair/index.html",
-  "/matbakh-alkhair/style.css",
-  "/matbakh-alkhair/app.js",
-  "/matbakh-alkhair/manifest.json",
-  "/matbakh-alkhair/icon.png",
+  "./",
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png",
   "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"
 ];
 

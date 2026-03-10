@@ -15,7 +15,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="مطبخ الخير">
 
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 </head>
 
 <body>
@@ -52,19 +53,13 @@
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-
-    navigator.serviceWorker.register("/matbakh-alkhair/sw.js", {
-      scope: "/matbakh-alkhair/"
-    })
-
-    .then(function () {
-      console.log("Service Worker registered");
-    })
-
-    .catch(function (error) {
-      console.log("Service Worker failed:", error);
-    });
-
+    navigator.serviceWorker.register("sw.js")
+      .then(function () {
+        console.log("Service Worker registered");
+      })
+      .catch(function (error) {
+        console.log("Service Worker failed:", error);
+      });
   });
 }
 </script>

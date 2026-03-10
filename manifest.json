@@ -1,21 +1,21 @@
 {
+  "id": "./",
   "name": "مطبخ الخير",
   "short_name": "مطبخ الخير",
-  "id": "/matbakh-alkhair/",
-  "start_url": "/matbakh-alkhair/",
-  "scope": "/matbakh-alkhair/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1f7a63",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/matbakh-alkhair/icon.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/matbakh-alkhair/icon.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
