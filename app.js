@@ -604,19 +604,15 @@ function nextIncomingPage() {
 function showOutgoing() {
   closeMenu();
 
-  let options = stock
-    .filter(i => i.qty > 0)
-    .map(i => {
-      let value = `${i.name}|||${i.unit}`;
-      return `<option value="${escapeHtml(value)}">${escapeHtml(i.name)} - ${escapeHtml(i.unit)} (المتوفر: ${formatNumber(i.qty)})</option>`;
-    })
-    .join("");
-
   document.getElementById("content").innerHTML = `
     <div style="background:#fff;padding:18px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:15px;">
       <h2>الخارج</h2>
       <input id="date" type="date" value="${getToday()}">
-      <select id="outName">${options || '<option value="">لا يوجد أصناف متاحة</option>'}</select>
+
+      <input id="outSearch" placeholder="ابحث عن الصنف داخل القائمة" oninput="renderOutgoingOptions()">
+
+      <select id="outName"></select>
+
       <input id="outQty" type="number" min="0" step="any" placeholder="الكمية">
       <input id="outNotes" placeholder="ملاحظات">
       <button onclick="saveOutgoing()">حفظ</button>
@@ -650,22 +646,53 @@ function showOutgoing() {
     </div>
   `;
 
+  renderOutgoingOptions();
   renderOutgoing();
 
   let perPageEl = document.getElementById("outgoingPerPage");
   if (perPageEl) perPageEl.value = outgoingPerPage;
 }
 
+function renderOutgoingOptions(selectedValue = "") {
+  let selectEl = document.getElementById("outName");
+  if (!selectEl) return;
+
+  let search = (document.getElementById("outSearch")?.value || "").trim().toLowerCase();
+
+  let items = stock
+    .filter(i => Number(i.qty || 0) > 0)
+    .slice()
+.sort((a, b) => normalizeArabicText(a.name).localeCompare(normalizeArabicText(b.name), "ar"));
+
+  if (search) {
+    items = items.filter(i =>
+      (i.name || "").toLowerCase().includes(search) ||
+      (i.unit || "").toLowerCase().includes(search)
+    );
+  }
+
+  let options = items.map(i => {
+    let value = `${i.name}|||${i.unit}`;
+    let isSelected = value === selectedValue ? "selected" : "";
+    return `<option value="${escapeHtml(value)}" ${isSelected}>${escapeHtml(i.name)} - ${escapeHtml(i.unit)} (المتوفر: ${formatNumber(i.qty)})</option>`;
+  }).join("");
+
+  selectEl.innerHTML = options || `<option value="">لا يوجد أصناف متاحة</option>`;
+}
+
 function clearOutgoingForm() {
   let dateEl = document.getElementById("date");
   let qtyEl = document.getElementById("outQty");
   let notesEl = document.getElementById("outNotes");
+  let searchEl = document.getElementById("outSearch");
 
   if (dateEl) dateEl.value = getToday();
   if (qtyEl) qtyEl.value = "";
   if (notesEl) notesEl.value = "";
+  if (searchEl) searchEl.value = "";
 
   editOutgoingIndex = null;
+  renderOutgoingOptions();
 }
 
 function saveOutgoing() {
@@ -794,11 +821,8 @@ function editOutgoing(i) {
     document.getElementById("outQty").value = item.qty || "";
     document.getElementById("outNotes").value = item.notes || "";
 
-    let select = document.getElementById("outName");
     let targetValue = `${item.name}|||${item.unit}`;
-    if ([...select.options].some(opt => opt.value === targetValue)) {
-      select.value = targetValue;
-    }
+    renderOutgoingOptions(targetValue);
 
     editOutgoingIndex = i;
   }, 0);
@@ -885,14 +909,57 @@ function nextOutgoingPage() {
   }
 }
 
+function normalizeArabicText(text) {
+  return (text || "")
+    .toString()
+    .trim()
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي");
+}
+
 /* =======================
    المخزون
 ======================= */
 function showStock() {
   closeMenu();
+
+  let totalStockItems = stock.length;
+  let totalStockQty = stock.reduce((sum, i) => sum + Number(i.qty || 0), 0);
+  let totalStockValue = stock.reduce((sum, i) => sum + Number(i.total || 0), 0);
+let lowStockItems = stock.filter(i => Number(i.qty || 0) > 0 && Number(i.qty || 0) <= 5);
+
   document.getElementById("content").innerHTML = `
     <div style="background:#fff;padding:18px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
       <h2>المخزون الحالي</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px;">
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;padding:14px;border-radius:10px;">
+          <div>عدد أصناف المخزون</div>
+          <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockItems)}</strong>
+        </div>
+
+<div style="margin-bottom:16px;padding:14px;border-radius:10px;background:${lowStockItems.length ? '#fff4f4' : '#f6fff8'};border:1px solid ${lowStockItems.length ? '#f0b6b6' : '#b7e3c2'};">
+        <strong style="display:block;margin-bottom:8px;color:${lowStockItems.length ? '#c0392b' : '#1f7a63'};">
+          ${lowStockItems.length ? 'تنبيه مخزون منخفض' : 'حالة المخزون جيدة'}
+        </strong>
+        ${
+          lowStockItems.length
+            ? lowStockItems.map(i => `<div style="margin-bottom:4px;">${escapeHtml(i.name)} — المتبقي: ${formatNumber(i.qty)} ${escapeHtml(i.unit)}</div>`).join("")
+            : '<div>لا يوجد أصناف منخفضة حاليًا.</div>'
+        }
+      </div>
+      
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;padding:14px;border-radius:10px;">
+          <div>إجمالي الكمية المتبقية</div>
+          <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockQty)}</strong>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;padding:14px;border-radius:10px;">
+          <div>إجمالي قيمة المخزون المتبقي</div>
+          <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockValue)}</strong>
+        </div>
+      </div>
 
       <div style="overflow-x:auto;">
         <table id="stockTable"></table>
@@ -928,10 +995,14 @@ function renderStock() {
   let tableEl = document.getElementById("stockTable");
   if (!tableEl) return;
 
+  let sortedStock = stock.slice().sort((a, b) =>
+    (a.name || "").localeCompare((b.name || ""), "ar")
+  );
+
   let start = (stockPage - 1) * stockPerPage;
   let end = start + stockPerPage;
-  let paginated = stock.slice(start, end);
-  let totalPages = Math.max(1, Math.ceil(stock.length / stockPerPage));
+  let paginated = sortedStock.slice(start, end);
+  let totalPages = Math.max(1, Math.ceil(sortedStock.length / stockPerPage));
 
   let table = `
     <tr style="background:#1f7a63;color:white;font-family:Arial;font-size:14px">
@@ -947,12 +1018,14 @@ function renderStock() {
       <th>الصنف</th>
       <th>الكمية</th>
       <th>الوحدة</th>
+      <th>سعر الوحدة</th>
+      <th>الإجمالي المتبقي</th>
       <th>ملاحظات</th>
     </tr>
   `;
 
   if (stock.length === 0) {
-    table += `<tr><td colspan="6">لا يوجد مخزون</td></tr>`;
+    table += `<tr><td colspan="8">لا يوجد مخزون</td></tr>`;
   } else {
     paginated.forEach((i, index) => {
       let realIndex = start + index;
@@ -970,6 +1043,8 @@ function renderStock() {
           <td>${escapeHtml(i.name)}</td>
           <td style="color:#2980b9">${formatNumber(i.qty)}</td>
           <td>${escapeHtml(i.unit)}</td>
+          <td>${formatNumber(i.price || 0)}</td>
+          <td style="color:#27ae60">${formatNumber(i.total || 0)}</td>
           <td>${escapeHtml(i.notes || "")}</td>
         </tr>
       `;
@@ -1020,6 +1095,8 @@ function exportSelectedStock() {
       "الصنف": i.name || "",
       "الكمية": i.qty || 0,
       "الوحدة": i.unit || "",
+      "سعر الوحدة": i.price || 0,
+      "الإجمالي المتبقي": i.total || (Number(i.qty || 0) * Number(i.price || 0)),
       "ملاحظات": i.notes || ""
     });
   });
@@ -1041,7 +1118,7 @@ function prevStockPage() {
 }
 
 function nextStockPage() {
-  let totalPages = Math.max(1, Math.ceil(stock.length / stockPerPage));
+let totalPages = Math.max(1, Math.ceil(sortedStock.length / stockPerPage));
 
   if (stockPage < totalPages) {
     stockPage++;
@@ -1669,15 +1746,28 @@ function clearAllData() {
 function updateStockIncoming(item) {
   if (!item || !item.name || !item.unit) return;
 
+  let qty = Number(item.qty || 0);
+  let price = Number(item.price || 0);
+  let total = qty * price;
+
   let exist = stock.find(i => i.name === item.name && i.unit === item.unit);
+
   if (exist) {
-    exist.qty += Number(item.qty || 0);
+    let oldQty = Number(exist.qty || 0);
+    let oldTotal = Number(exist.total || 0);
+
+    exist.qty = oldQty + qty;
+    exist.total = oldTotal + total;
+    exist.price = exist.qty > 0 ? (exist.total / exist.qty) : 0;
+
     if (item.notes) exist.notes = item.notes;
   } else {
     stock.push({
       name: item.name,
-      qty: Number(item.qty || 0),
+      qty: qty,
       unit: item.unit,
+      price: price,
+      total: total,
       notes: item.notes || ""
     });
   }
@@ -1688,7 +1778,14 @@ function updateStockOutgoing(item) {
 
   let exist = stock.find(i => i.name === item.name && i.unit === item.unit);
   if (exist) {
-    exist.qty -= Number(item.qty || 0);
+    let outQty = Number(item.qty || 0);
+    let currentPrice = Number(exist.price || 0);
+
+    exist.qty = Number(exist.qty || 0) - outQty;
+    if (exist.qty < 0) exist.qty = 0;
+
+    exist.total = exist.qty * currentPrice;
+    if (exist.total < 0) exist.total = 0;
   }
 }
 
@@ -1807,6 +1904,8 @@ function exportStock() {
     "الصنف": i.name || "",
     "الكمية": i.qty || 0,
     "الوحدة": i.unit || "",
+    "سعر الوحدة": i.price || 0,
+    "الإجمالي المتبقي": i.total || (Number(i.qty || 0) * Number(i.price || 0)),
     "ملاحظات": i.notes || ""
   }));
 
