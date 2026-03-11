@@ -927,7 +927,7 @@ function showStock() {
   let totalStockItems = stock.length;
   let totalStockQty = stock.reduce((sum, i) => sum + Number(i.qty || 0), 0);
   let totalStockValue = stock.reduce((sum, i) => sum + Number(i.total || 0), 0);
-let lowStockItems = stock.filter(i => Number(i.qty || 0) > 0 && Number(i.qty || 0) <= 5);
+  let lowStockItems = stock.filter(i => Number(i.qty || 0) > 0 && Number(i.qty || 0) <= 5);
 
   document.getElementById("content").innerHTML = `
     <div style="background:#fff;padding:18px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
@@ -939,7 +939,18 @@ let lowStockItems = stock.filter(i => Number(i.qty || 0) > 0 && Number(i.qty || 
           <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockItems)}</strong>
         </div>
 
-<div style="margin-bottom:16px;padding:14px;border-radius:10px;background:${lowStockItems.length ? '#fff4f4' : '#f6fff8'};border:1px solid ${lowStockItems.length ? '#f0b6b6' : '#b7e3c2'};">
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;padding:14px;border-radius:10px;">
+          <div>إجمالي الكمية المتبقية</div>
+          <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockQty)}</strong>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;padding:14px;border-radius:10px;">
+          <div>إجمالي قيمة المخزون المتبقي</div>
+          <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockValue)}</strong>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;padding:14px;border-radius:10px;background:${lowStockItems.length ? '#fff4f4' : '#f6fff8'};border:1px solid ${lowStockItems.length ? '#f0b6b6' : '#b7e3c2'};">
         <strong style="display:block;margin-bottom:8px;color:${lowStockItems.length ? '#c0392b' : '#1f7a63'};">
           ${lowStockItems.length ? 'تنبيه مخزون منخفض' : 'حالة المخزون جيدة'}
         </strong>
@@ -949,15 +960,10 @@ let lowStockItems = stock.filter(i => Number(i.qty || 0) > 0 && Number(i.qty || 
             : '<div>لا يوجد أصناف منخفضة حاليًا.</div>'
         }
       </div>
-      
-        <div style="background:#f8fafc;border:1px solid #e5e7eb;padding:14px;border-radius:10px;">
-          <div>إجمالي الكمية المتبقية</div>
-          <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockQty)}</strong>
-        </div>
 
-        <div style="background:#f8fafc;border:1px solid #e5e7eb;padding:14px;border-radius:10px;">
-          <div>إجمالي قيمة المخزون المتبقي</div>
-          <strong style="font-size:22px;color:#1f7a63;">${formatNumber(totalStockValue)}</strong>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="min-width:220px;flex:1;max-width:320px;">
+          <input id="stockSearch" placeholder="ابحث باسم الصنف أو الوحدة أو الملاحظات" oninput="stockPage = 1; renderStock()">
         </div>
       </div>
 
@@ -995,14 +1001,27 @@ function renderStock() {
   let tableEl = document.getElementById("stockTable");
   if (!tableEl) return;
 
-  let sortedStock = stock.slice().sort((a, b) =>
+  let search = (document.getElementById("stockSearch")?.value || "").trim().toLowerCase();
+
+  let filteredStock = stock.filter(i => {
+    if (!search) return true;
+    return (
+      (i.name || "").toLowerCase().includes(search) ||
+      (i.unit || "").toLowerCase().includes(search) ||
+      (i.notes || "").toLowerCase().includes(search)
+    );
+  });
+
+  let sortedStock = filteredStock.slice().sort((a, b) =>
     (a.name || "").localeCompare((b.name || ""), "ar")
   );
+
+  let totalPages = Math.max(1, Math.ceil(sortedStock.length / stockPerPage));
+  if (stockPage > totalPages) stockPage = totalPages;
 
   let start = (stockPage - 1) * stockPerPage;
   let end = start + stockPerPage;
   let paginated = sortedStock.slice(start, end);
-  let totalPages = Math.max(1, Math.ceil(sortedStock.length / stockPerPage));
 
   let table = `
     <tr style="background:#1f7a63;color:white;font-family:Arial;font-size:14px">
@@ -1010,7 +1029,7 @@ function renderStock() {
         <input
           type="checkbox"
           id="selectAllStock"
-          ${stock.length > 0 && stock.every((_, index) => selectedStock.has(index)) ? "checked" : ""}
+          ${filteredStock.length > 0 && filteredStock.every(i => selectedStock.has(stock.indexOf(i))) ? "checked" : ""}
           onchange="toggleSelectAllStock(this)"
         >
       </th>
@@ -1024,11 +1043,11 @@ function renderStock() {
     </tr>
   `;
 
-  if (stock.length === 0) {
+  if (sortedStock.length === 0) {
     table += `<tr><td colspan="8">لا يوجد مخزون</td></tr>`;
   } else {
     paginated.forEach((i, index) => {
-      let realIndex = start + index;
+      let realIndex = stock.indexOf(i);
 
       table += `
         <tr>
@@ -1039,12 +1058,12 @@ function renderStock() {
               onchange="toggleStockSelection(${realIndex}, this)"
             >
           </td>
-          <td style="color:#d35400">${realIndex + 1}</td>
+          <td style="color:#d35400">${start + index + 1}</td>
           <td>${escapeHtml(i.name)}</td>
           <td style="color:#2980b9">${formatNumber(i.qty)}</td>
           <td>${escapeHtml(i.unit)}</td>
           <td>${formatNumber(i.price || 0)}</td>
-          <td style="color:#27ae60">${formatNumber(i.total || 0)}</td>
+          <td style="color:#27ae60">${formatNumber(i.total || (Number(i.qty || 0) * Number(i.price || 0)))}</td>
           <td>${escapeHtml(i.notes || "")}</td>
         </tr>
       `;
@@ -1068,11 +1087,22 @@ function toggleStockSelection(index, checkbox) {
 }
 
 function toggleSelectAllStock(source) {
+  let search = (document.getElementById("stockSearch")?.value || "").trim().toLowerCase();
+
+  let filteredStock = stock.filter(i => {
+    if (!search) return true;
+    return (
+      (i.name || "").toLowerCase().includes(search) ||
+      (i.unit || "").toLowerCase().includes(search) ||
+      (i.notes || "").toLowerCase().includes(search)
+    );
+  });
+
   selectedStock.clear();
 
   if (source.checked) {
-    stock.forEach((_, index) => {
-      selectedStock.add(index);
+    filteredStock.forEach(i => {
+      selectedStock.add(stock.indexOf(i));
     });
   }
 
@@ -1118,7 +1148,18 @@ function prevStockPage() {
 }
 
 function nextStockPage() {
-let totalPages = Math.max(1, Math.ceil(sortedStock.length / stockPerPage));
+  let search = (document.getElementById("stockSearch")?.value || "").trim().toLowerCase();
+
+  let filteredStock = stock.filter(i => {
+    if (!search) return true;
+    return (
+      (i.name || "").toLowerCase().includes(search) ||
+      (i.unit || "").toLowerCase().includes(search) ||
+      (i.notes || "").toLowerCase().includes(search)
+    );
+  });
+
+  let totalPages = Math.max(1, Math.ceil(filteredStock.length / stockPerPage));
 
   if (stockPage < totalPages) {
     stockPage++;
