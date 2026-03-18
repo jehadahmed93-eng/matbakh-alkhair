@@ -1,4 +1,4 @@
-const CACHE_NAME = "matbakh-alkhair-v10";
+const CACHE_NAME = "matbakh-alkhair-v11";
 
 const ASSETS_TO_CACHE = [
   "./",

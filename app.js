@@ -620,7 +620,12 @@ function showOutgoing() {
     </div>
 
     <div style="background:#fff;padding:18px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <h3 style="margin-top:0;">سجل الخارج</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+        <h3 style="margin:0;">سجل الخارج</h3>
+        <div style="min-width:220px;flex:1;max-width:320px;">
+          <input id="outgoingSearch" placeholder="ابحث بالاسم أو التاريخ أو الملاحظات" oninput="outgoingPage = 1; renderOutgoing()">
+        </div>
+      </div>
 
       <div style="overflow-x:auto;">
         <table id="outgoingTable"></table>
@@ -662,7 +667,7 @@ function renderOutgoingOptions(selectedValue = "") {
   let items = stock
     .filter(i => Number(i.qty || 0) > 0)
     .slice()
-.sort((a, b) => normalizeArabicText(a.name).localeCompare(normalizeArabicText(b.name), "ar"));
+    .sort((a, b) => normalizeArabicText(a.name).localeCompare(normalizeArabicText(b.name), "ar"));
 
   if (search) {
     items = items.filter(i =>
@@ -745,10 +750,22 @@ function renderOutgoing() {
   let tableEl = document.getElementById("outgoingTable");
   if (!tableEl) return;
 
+  let search = (document.getElementById("outgoingSearch")?.value || "").trim().toLowerCase();
+
+  let filtered = outgoing.filter(i => {
+    if (!search) return true;
+    return (
+      (i.date || "").toLowerCase().includes(search) ||
+      (i.name || "").toLowerCase().includes(search) ||
+      (i.unit || "").toLowerCase().includes(search) ||
+      (i.notes || "").toLowerCase().includes(search)
+    );
+  });
+
   let start = (outgoingPage - 1) * outgoingPerPage;
   let end = start + outgoingPerPage;
-  let paginated = outgoing.slice(start, end);
-  let totalPages = Math.max(1, Math.ceil(outgoing.length / outgoingPerPage));
+  let paginated = filtered.slice(start, end);
+  let totalPages = Math.max(1, Math.ceil(filtered.length / outgoingPerPage));
 
   let table = `
     <tr style="background:#1f7a63;color:white;font-family:Arial;font-size:14px">
@@ -756,7 +773,7 @@ function renderOutgoing() {
         <input
           type="checkbox"
           id="selectAllOutgoing"
-          ${outgoing.length > 0 && outgoing.every((_, index) => selectedOutgoing.has(index)) ? "checked" : ""}
+          ${filtered.length > 0 && filtered.every(i => selectedOutgoing.has(outgoing.indexOf(i))) ? "checked" : ""}
           onchange="toggleSelectAllOutgoing(this)"
         >
       </th>
@@ -770,11 +787,11 @@ function renderOutgoing() {
     </tr>
   `;
 
-  if (outgoing.length === 0) {
+  if (filtered.length === 0) {
     table += `<tr><td colspan="8">لا توجد بيانات</td></tr>`;
   } else {
     paginated.forEach((i, index) => {
-      let realIndex = start + index;
+      let realIndex = outgoing.indexOf(i);
 
       table += `
         <tr>
@@ -785,7 +802,7 @@ function renderOutgoing() {
               onchange="toggleOutgoingSelection(${realIndex}, this)"
             >
           </td>
-          <td style="color:#d35400">${realIndex + 1}</td>
+          <td style="color:#d35400">${start + index + 1}</td>
           <td>${escapeHtml(i.date)}</td>
           <td>${escapeHtml(i.name)}</td>
           <td style="color:#2980b9">${formatNumber(i.qty)}</td>
@@ -852,11 +869,23 @@ function toggleOutgoingSelection(index, checkbox) {
 }
 
 function toggleSelectAllOutgoing(source) {
+  let search = (document.getElementById("outgoingSearch")?.value || "").trim().toLowerCase();
+
+  let filtered = outgoing.filter(i => {
+    if (!search) return true;
+    return (
+      (i.date || "").toLowerCase().includes(search) ||
+      (i.name || "").toLowerCase().includes(search) ||
+      (i.unit || "").toLowerCase().includes(search) ||
+      (i.notes || "").toLowerCase().includes(search)
+    );
+  });
+
   selectedOutgoing.clear();
 
   if (source.checked) {
-    outgoing.forEach((_, index) => {
-      selectedOutgoing.add(index);
+    filtered.forEach(i => {
+      selectedOutgoing.add(outgoing.indexOf(i));
     });
   }
 
@@ -901,7 +930,19 @@ function prevOutgoingPage() {
 }
 
 function nextOutgoingPage() {
-  let totalPages = Math.max(1, Math.ceil(outgoing.length / outgoingPerPage));
+  let search = (document.getElementById("outgoingSearch")?.value || "").trim().toLowerCase();
+
+  let filtered = outgoing.filter(i => {
+    if (!search) return true;
+    return (
+      (i.date || "").toLowerCase().includes(search) ||
+      (i.name || "").toLowerCase().includes(search) ||
+      (i.unit || "").toLowerCase().includes(search) ||
+      (i.notes || "").toLowerCase().includes(search)
+    );
+  });
+
+  let totalPages = Math.max(1, Math.ceil(filtered.length / outgoingPerPage));
 
   if (outgoingPage < totalPages) {
     outgoingPage++;
